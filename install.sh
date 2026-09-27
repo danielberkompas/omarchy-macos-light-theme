@@ -18,6 +18,7 @@ THEMES="$HOME/.config/omarchy/themes"
 skip_packages=false
 skip_titlebars=false
 skip_icons=false
+skip_settings=false
 apply_theme=true
 
 usage() {
@@ -27,6 +28,7 @@ Usage: ./install.sh [options]
   --skip-packages   Don't install packages (dock, fonts, build tools)
   --skip-titlebars  Don't build the hyprbars plugin (window title bars)
   --skip-icons      Don't download the WhiteSur icon theme
+  --skip-settings   Don't install OmaSettings (the System Settings window)
   --keep-theme      Install everything but don't switch to macOS Light now
   -h, --help        Show this help
 EOF
@@ -37,6 +39,7 @@ for arg in "$@"; do
     --skip-packages) skip_packages=true ;;
     --skip-titlebars) skip_titlebars=true ;;
     --skip-icons) skip_icons=true ;;
+    --skip-settings) skip_settings=true ;;
     --keep-theme) apply_theme=false ;;
     -h | --help) usage; exit 0 ;;
     *) echo "Unknown option: $arg" >&2; usage >&2; exit 1 ;;
@@ -222,7 +225,7 @@ pins="$HOME/.cache/nwg-dock-pinned"
 if [[ -s $pins ]]; then
   note "Keeping your pinned dock apps (~/.cache/nwg-dock-pinned)."
 else
-  printf '%s\n' org.gnome.Nautilus launchpad chromium foot localsend omacalc downloads-stack trash | write_file "$pins"
+  printf '%s\n' org.gnome.Nautilus launchpad omasettings chromium foot localsend omacalc downloads-stack trash | write_file "$pins"
 fi
 
 # --------------------------------------------------------------------------
@@ -251,6 +254,24 @@ if fc-list : family | has -i "DejaVuSansM Nerd Font"; then
   omarchy font set "DejaVuSansM Nerd Font" >/dev/null 2>&1 || warn "Couldn't set the terminal font."
 else
   warn "DejaVuSansM Nerd Font isn't installed, so the terminal font is unchanged."
+fi
+
+# --------------------------------------------------------------------------
+step "Installing System Settings (OmaSettings)"
+omasettings_id="io.github.twiking.omasettings"
+if $skip_settings; then
+  note "Skipped (--skip-settings)."
+else
+  if omarchy plugin list --json 2>/dev/null | jq -e --arg id "$omasettings_id" '[.. | objects | select(.id? == $id)] | length > 0' >/dev/null; then
+    note "OmaSettings is already installed."
+  else
+    omarchy plugin add https://github.com/twiking/omasettings.git --enable --yes ||
+      warn "Couldn't install OmaSettings. Try later: omarchy plugin add https://github.com/twiking/omasettings.git --enable"
+  fi
+  # OmaSettings can't create its own launcher entry on Omarchy 4.0.4
+  # (twiking/omasettings#17), so add one, named like the Mac's.
+  install_path "$EXTRAS/applications/omasettings.desktop" "$apps/omasettings.desktop"
+  update-desktop-database "$apps" 2>/dev/null || true
 fi
 
 # --------------------------------------------------------------------------
@@ -331,6 +352,7 @@ Done! A few things to know:
   • The key next to the spacebar is now ⌘ Command, and the one beside it is
     ⌥ Option, just like on a Mac.
   • ⌘Space opens apps, ⌥⌘Space opens the Omarchy menu, and ⌘K lists every shortcut.
+  • System Settings (the gear in the dock and the menu bar) changes almost anything.
   • Restart Chromium (and any other open apps) to pick up the new fonts and buttons.
   • Log out and back in once to make sure everything starts cleanly.
 

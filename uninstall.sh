@@ -85,4 +85,5 @@ These were left installed; remove them yourself if you like:
   • Packages:     omarchy pkg drop nwg-dock-hyprland inter-font ttf-dejavu-nerd
   • Title bars:   hyprpm disable hyprbars
   • Icons:        rm -rf ~/.local/share/icons/WhiteSur{,-light,-dark}
+  • Settings app: omarchy plugin remove io.github.twiking.omasettings
 EOF

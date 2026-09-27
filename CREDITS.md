@@ -44,6 +44,7 @@ These aren't bundled. `install.sh` downloads or installs them:
 - [DejaVu Sans Mono Nerd Font](https://www.nerdfonts.com/) (Bitstream Vera license + MIT)
 - [nwg-dock-hyprland](https://github.com/nwg-piotr/nwg-dock-hyprland) (MIT)
 - [hyprbars](https://github.com/hyprwm/hyprland-plugins) from hyprland-plugins (BSD-3-Clause)
+- [OmaSettings](https://github.com/twiking/omasettings) by Tobias Wiking (MIT), used as System Settings
 
 This project isn't affiliated with or endorsed by Apple. macOS is a trademark
 of Apple Inc.

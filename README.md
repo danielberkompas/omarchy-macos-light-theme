@@ -50,7 +50,11 @@ shortcuts or run scripts, so you won't get the dock, title bars or ⌘ keys.
   apps, and DejaVu Sans Mono (the font Apple's Menlo was built from) for code.
 
 **Feels**
-- **A dock** with Finder, Launchpad, a Downloads stack, and Trash. Dots show
+- **System Settings**: [OmaSettings](https://github.com/twiking/omasettings),
+  one searchable window for appearance, the menu bar, windows, keyboard,
+  trackpad, displays, sound, Wi-Fi, Bluetooth, power and more. Anything you
+  change can be put back. Open it from the gear in the dock or the menu bar.
+- **A dock** with Finder, Launchpad, System Settings, a Downloads stack, and Trash. Dots show
   running apps, and it's frosted glass in light and dark mode.
 - **Title bars with traffic lights.** Red closes, yellow minimizes into the
   dock with a genie animation, and green maximizes. Chromium gets them too.
@@ -105,10 +109,8 @@ These load right after Omarchy's defaults and before your own
 Updating with `install.sh` replaces the files above, so put personal tweaks in
 your own files rather than editing the installed copies.
 
-For a settings window instead of editing files, try
-[OmaSettings](https://github.com/twiking/omasettings), a searchable panel for
-every Omarchy setting that can undo any change. It writes to your own files,
-so it works alongside this theme.
+Or skip the files and use **System Settings**. It saves your changes to your
+own files, so they always win over the theme's defaults too.
 
 ## Updating and uninstalling
 
@@ -126,7 +128,8 @@ To remove everything and put your original files back:
 
 Everything the installer replaces is saved in
 `~/.local/share/omarchy-macos/originals` first. The uninstaller leaves the
-packages, icons and hyprbars plugin installed and tells you how to remove them.
+packages, icons, hyprbars plugin and System Settings installed, and tells you
+how to remove them.
 
 ## Requirements
 
