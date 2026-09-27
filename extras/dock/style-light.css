@@ -1,0 +1,61 @@
+/* macOS-style dock (light mode): frosted glass, no hover boxes, dots under running apps.
+   The blur comes from a Hyprland layer rule in ~/.config/hypr/macos/looknfeel.lua. */
+window {
+  background: rgba(255, 255, 255, 0.32);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.10);
+}
+
+#box {
+  padding: 5px 6px 1px 6px;
+}
+
+button, image {
+  background: none;
+  border-style: none;
+  box-shadow: none;
+  outline: none;
+}
+
+button {
+  padding: 0;
+  margin: 0 2px;
+  border-radius: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* No highlight box on hover, like macOS; icons darken slightly when pressed. */
+button:hover,
+button:focus,
+#active {
+  background: none;
+  box-shadow: none;
+}
+
+button:active image {
+  opacity: 0.6;
+}
+
+/* App-name labels shown above icons on hover: a solid macOS-style pill with
+   larger, darker text so it stays readable over any wallpaper. */
+tooltip,
+tooltip.background {
+  background-color: rgb(250, 250, 250);
+  background-image: none;
+  color: #111111;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  box-shadow: none;
+  text-shadow: none;
+  font-family: "Inter Variable", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+tooltip label {
+  padding: 4px 10px;
+  color: #111111;
+  text-shadow: none;
+}

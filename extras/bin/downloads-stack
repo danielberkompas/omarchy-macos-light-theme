@@ -1,0 +1,29 @@
+#!/bin/bash
+# macOS-style Downloads "stack" for the dock: toggles a popup grid of the newest
+# files in ~/Downloads, positioned above the dock (Quickshell config in
+# ~/.config/quickshell/downloads-stack).
+
+CONFIG="$HOME/.config/quickshell/downloads-stack"
+
+# Second click on the dock icon closes the stack.
+if pkill -f "qs -p $CONFIG"; then
+  exit 0
+fi
+
+# Place the popup over the cursor (i.e. over the dock icon that was clicked),
+# just above the dock on the focused monitor.
+read -r MONITOR MON_X MON_W MON_H < <(hyprctl monitors -j | jq -r \
+  '.[] | select(.focused) | "\(.name) \(.x) \(.width / .scale | floor) \(.height / .scale | floor)"')
+CURSOR_X=$(hyprctl cursorpos -j | jq -r '.x')
+DOCK_TOP=$(hyprctl layers -j | jq -r --arg m "$MONITOR" \
+  '[.[$m].levels[][] | select(.namespace == "nwg-dock") | .y] | first // empty')
+
+# Match the theme's light/dark mode.
+grep -q '^mode *= *"dark"' "$HOME/.local/state/omarchy/current/theme/colors.toml" 2>/dev/null && export STACK_DARK=1
+
+export STACK_MONITOR="$MONITOR"
+export STACK_CENTER_X=$((CURSOR_X - MON_X))
+export STACK_SCREEN_W="$MON_W"
+export STACK_BOTTOM=$((MON_H - ${DOCK_TOP:-$((MON_H - 70))} + 8))
+
+exec qs -p "$CONFIG"

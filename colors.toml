@@ -1,0 +1,34 @@
+# Apple macOS light-mode colors with a pale dahlia-pink tint (from the
+# Micro Flower Farm background). Every text color passes WCAG AA
+# contrast (4.5:1 or better) on the light background.
+mode = "light"
+
+accent = "#007aff"
+selection = "#f7cfe1"
+muted = "#5e5e63"
+
+background = "#fdf6f9"
+dark_background = "#f9edf2"
+darker_background = "#f1dfe8"
+lighter_background = "#f5e7ee"
+
+foreground = "#1d1d1f"
+dark_foreground = "#6e6e73"
+light_foreground = "#3a3a3c"
+bright_foreground = "#000000"
+
+red = "#c4001a"
+yellow = "#8a5100"
+orange = "#b23a00"
+green = "#1a7431"
+cyan = "#006584"
+blue = "#0040dd"
+magenta = "#8030a0"
+brown = "#7f6545"
+
+bright_red = "#d70015"
+bright_yellow = "#9a5b00"
+bright_green = "#1c7a33"
+bright_cyan = "#0073a0"
+bright_blue = "#0060df"
+bright_magenta = "#9a3fc0"

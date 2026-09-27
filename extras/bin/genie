@@ -1,0 +1,82 @@
+#!/bin/bash
+# macOS-style genie minimize/restore, driven by ~/.config/hypr/macos/minimize.lua.
+#
+#   genie minimize <address>   snapshot the window, then genie it into its dock icon
+#   genie restore  <address>   genie the last snapshot back out into the window's
+#                              spot (minimize.lua has already put it back into the
+#                              layout, invisibly), then reveal it
+#
+# The animation runs in the resident Quickshell daemon at
+# ~/.config/quickshell/genie. If it isn't running, windows minimize/restore
+# instantly instead.
+
+ACTION=$1
+ADDRESS=$2
+CONFIG="$HOME/.config/quickshell/genie"
+CACHE="${XDG_RUNTIME_DIR:-/tmp}/genie"
+PINNED="$HOME/.cache/nwg-dock-pinned"
+TITLEBAR=28 # hyprbars bar_height (~/.config/hypr/macos/titlebars.lua); drawn above the window's rect (not on Chromium)
+BORDER=1
+
+mkdir -p "$CACHE"
+
+instant() {
+  if [[ $ACTION == minimize ]]; then
+    hyprctl dispatch "hl.dsp.window.move({ workspace = 'special:minimized', follow = false, window = 'address:$ADDRESS' })" >/dev/null
+  else
+    hyprctl dispatch "function() genie_finish_restore('$ADDRESS') end" >/dev/null
+  fi
+  exit 0
+}
+
+[[ -n $ADDRESS ]] || exit 1
+qs -p "$CONFIG" ipc show >/dev/null 2>&1 || instant
+
+clients=$(hyprctl clients -j)
+client=$(jq -c --arg a "$ADDRESS" '.[] | select(.address == $a)' <<<"$clients")
+[[ -n $client ]] || exit 0
+
+monitor=$(hyprctl monitors -j | jq -c --argjson id "$(jq '.monitor' <<<"$client")" '.[] | select(.id == $id)')
+read -r MON MON_X MON_Y MON_W MON_H < <(jq -r '"\(.name) \(.x) \(.y) \(.width / .scale | floor) \(.height / .scale | floor)"' <<<"$monitor")
+
+# Where the app's icon sits in the dock. Mirrors nwg-dock-hyprland's ordering:
+# pinned items first, then other running apps by workspace id, then class.
+# Every item is the same width, centred in the dock.
+read -r ICON_X ICON_Y < <(
+  jq -r -n \
+    --argjson clients "$clients" \
+    --argjson layers "$(hyprctl layers -j)" \
+    --arg class "$(jq -r '.class' <<<"$client")" \
+    --arg mon "$MON" --argjson mx "$MON_X" --argjson my "$MON_Y" --argjson mw "$MON_W" --argjson mh "$MON_H" \
+    --rawfile pinned "$PINNED" '
+    ($pinned | split("\n") | map(select(length > 0)) | reduce .[] as $p ([]; if index([$p]) then . else . + [$p] end)) as $pins
+    | ($clients | sort_by(.workspace.id, .class) | map(.class) | map(select(length > 0))) as $running
+    | (reduce $running[] as $c ($pins; if index([$c]) then . else . + [$c] end)) as $items
+    | ($items | index([$class])) as $i
+    | ([$layers[$mon].levels[][] | select(.namespace == "nwg-dock")] | first) as $dock
+    | if $dock and $i != null then
+        (($dock.w - 12) / ($items | length)) as $cell
+        | "\($dock.x - $mx + $dock.w / 2 + ($i - (($items | length) - 1) / 2) * $cell | floor) \($dock.y - $my + $dock.h / 2 | floor)"
+      else
+        "\($mw / 2 | floor) \($mh)"
+      end'
+)
+
+# The window's on-screen rect, including its title bar and border. When
+# restoring, this is the spot the layout has just made for it.
+read -r X Y W H < <(jq -r --argjson bar "$TITLEBAR" --argjson b "$BORDER" \
+  '(if .fullscreen > 0 or (.class | test("^(chromium|google-chrome)$")) then 0 else $bar end) as $t
+   | "\(.at[0] - $b) \(.at[1] - $t - $b) \(.size[0] + 2 * $b) \(.size[1] + $t + 2 * $b)"' <<<"$client")
+
+if [[ $ACTION == minimize ]]; then
+  rm -f "$CACHE/$ADDRESS".*
+  snapshot="$CACHE/$ADDRESS.$(date +%s%N).png"
+  grim -g "$X,$Y ${W}x$H" "$snapshot" || instant
+else
+  # The snapshot from when it was minimized, stretched to fit the new spot.
+  snapshot=$(ls "$CACHE/$ADDRESS".*.png 2>/dev/null | head -n1)
+  [[ -n $snapshot ]] || instant
+fi
+
+qs -p "$CONFIG" ipc call genie "$ACTION" "$ADDRESS" "$snapshot" "$MON" \
+  $((X - MON_X)) $((Y - MON_Y)) "$W" "$H" "$ICON_X" "$ICON_Y" >/dev/null 2>&1 || instant

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Launchpad
+Comment=Show all applications
+Exec=omarchy-menu toggle apps
+Icon=view-app-grid
+NoDisplay=true
+StartupNotify=false

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Launch Chromium with its window buttons on the left (close, minimize,
+# maximize), without changing the layout for other GTK apps. The buttons
+# themselves are covered by traffic lights from ~/.config/quickshell/chrome-lights,
+# since Hyprland ignores Chromium's own minimize/maximize requests.
+# The layout lives in a private dconf layer (~/.config/dconf/chromium.profile, created by install.sh)
+# that falls through to the normal user settings for everything else.
+export DCONF_PROFILE="$HOME/.config/dconf/chromium.profile"
+export GDK_DEBUG=no-portals
+exec /usr/bin/chromium "$@"

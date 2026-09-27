@@ -1,0 +1,18 @@
+#!/bin/bash
+# Start (or restart) the macOS-style dock. Runs in the foreground; to restart it
+# from a terminal or script, use: setsid -f uwsm-app -- macos-dock
+#
+# Pinned apps live in ~/.cache/nwg-dock-pinned (right-click an icon to pin or
+# unpin). Its look comes from ~/.config/nwg-dock-hyprland/style.css, which
+# macos-theme-sync rewrites for light or dark mode whenever the theme changes.
+#
+# nwg-dock uses the LAST matching .desktop file it finds rather than the first,
+# so ~/.local/share is listed again at the end of XDG_DATA_DIRS to make personal
+# overrides (like ~/.local/share/applications/chromium.desktop) win.
+
+pkill -x nwg-dock-hyprla 2>/dev/null && sleep 0.3
+
+export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:$HOME/.local/share"
+
+# -x: always visible, windows tile above it. Swap for -d to auto-hide instead.
+exec nwg-dock-hyprland -x -p bottom -i 44 -mb 6 -nolauncher

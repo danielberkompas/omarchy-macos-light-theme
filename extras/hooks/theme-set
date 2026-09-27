@@ -1,0 +1,3 @@
+#!/bin/bash
+# omarchy-macos-light: restyle the dock for the new theme's light/dark mode.
+exec "$HOME/.local/bin/macos-theme-sync" "$@"
