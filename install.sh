@@ -211,7 +211,9 @@ gsettings set org.gnome.desktop.wm.preferences button-layout \
   "$(gsettings get org.gnome.desktop.wm.preferences button-layout)" # make sure the user db exists
 printf 'user-db:chromium\nfile-db:%s/.config/dconf/user\n' "$HOME" | write_file "$HOME/.config/dconf/chromium.profile"
 save_original "$HOME/.config/dconf/chromium"
-rm -f "$HOME/.config/dconf/chromium"
+# Go through dconf rather than deleting the file: the dconf service caches
+# databases, and would skip writing a value it thinks is already set.
+DCONF_PROFILE="$HOME/.config/dconf/chromium.profile" dconf reset -f /
 DCONF_PROFILE="$HOME/.config/dconf/chromium.profile" \
   dconf write /org/gnome/desktop/wm/preferences/button-layout "'close,minimize,maximize:'"
 record "$HOME/.config/dconf/chromium"

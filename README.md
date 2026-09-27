@@ -16,7 +16,7 @@ There are two ways to install it.
 ### The whole Mac experience (recommended)
 
 ```bash
-git clone https://github.com/OWNER/omarchy-macos-light-theme.git ~/.local/share/omarchy-macos-light-theme
+git clone https://github.com/danielberkompas/omarchy-macos-light-theme.git ~/.local/share/omarchy-macos-light-theme
 ~/.local/share/omarchy-macos-light-theme/install.sh
 ```
 
@@ -27,7 +27,7 @@ back in once.
 ### Just the look
 
 ```bash
-omarchy theme install https://github.com/OWNER/omarchy-macos-light-theme.git
+omarchy theme install https://github.com/danielberkompas/omarchy-macos-light-theme.git
 ```
 
 This gives you the colours, wallpapers, icons and translucent menu bar only.
