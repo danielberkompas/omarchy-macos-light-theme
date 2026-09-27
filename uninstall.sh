@@ -14,7 +14,6 @@ ORIGINALS="$SHARE/originals"
 step() { printf '\n\e[1;34m==>\e[0m \e[1m%s\e[0m\n' "$*"; }
 
 step "Stopping the dock and helpers"
-pkill -x nwg-dock-hyprla 2>/dev/null || true
 pkill -f "qs -p $HOME/.config/quickshell/genie" 2>/dev/null || true
 pkill -f "qs -p $HOME/.config/quickshell/chrome-lights" 2>/dev/null || true
 pkill -f "qs -p $HOME/.config/quickshell/downloads-stack" 2>/dev/null || true
@@ -82,7 +81,8 @@ cat <<'EOF'
 Uninstalled. Log out and back in to finish.
 
 These were left installed; remove them yourself if you like:
-  • Packages:     omarchy pkg drop nwg-dock-hyprland inter-font ttf-dejavu-nerd
+  • Packages:     omarchy pkg drop inter-font ttf-dejavu-nerd
+  • Dock:         omarchy plugin remove odock
   • Title bars:   hyprpm disable hyprbars
   • Icons:        rm -rf ~/.local/share/icons/WhiteSur{,-light,-dark}
   • Settings app: omarchy plugin remove io.github.twiking.omasettings

@@ -5,7 +5,9 @@ local mode = require("hypr.macos.mode")
 hl.config({
   general = {
     gaps_in = 3,
-    gaps_out = 6,
+    -- Extra room at the bottom keeps windows above the always-visible dock.
+    -- If you switch the dock to auto-hide, set bottom back to 6.
+    gaps_out = { top = 6, right = 6, bottom = 74, left = 6 },
     border_size = 1,          -- Hairline border, like macOS windows
     resize_on_border = true,  -- Drag window edges to resize
   },
@@ -56,8 +58,8 @@ hl.config({
   },
 })
 
--- Frosted-glass dock that slides up from the bottom edge, like macOS.
-hl.layer_rule({ match = { namespace = "nwg-dock" }, blur = true, ignore_alpha = 0.2, animation = "slide bottom" })
+-- Frosted-glass dock (ODock).
+hl.layer_rule({ match = { namespace = "^omarchy-odock$" }, blur = true, ignore_alpha = 0.3 })
 
 -- Frosted-glass menu bar (its translucency is set in the theme's shell.toml).
 hl.layer_rule({ match = { namespace = "omarchy-bar" }, blur = true, ignore_alpha = 0.2 })

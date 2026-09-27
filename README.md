@@ -54,8 +54,11 @@ shortcuts or run scripts, so you won't get the dock, title bars or ⌘ keys.
   one searchable window for appearance, the menu bar, windows, keyboard,
   trackpad, displays, sound, Wi-Fi, Bluetooth, power and more. Anything you
   change can be put back. Open it from the gear in the dock or the menu bar.
-- **A dock** with Finder, Launchpad, System Settings, a Downloads stack, and Trash. Dots show
-  running apps, and it's frosted glass in light and dark mode.
+- **A dock** ([ODock](https://github.com/hisnameismarco/odock)) with Finder,
+  Launchpad, System Settings, a Downloads stack and Trash. Icons magnify as you
+  move over them, bounce while an app opens, show running dots and name
+  bubbles, and you drag them to rearrange. Click and hold an icon to see all of
+  that app's windows.
 - **Title bars with traffic lights.** Red closes, yellow minimizes into the
   dock with a genie animation, and green maximizes. Chromium gets them too.
 - **⌘ Command where it belongs.** The key next to the spacebar acts as ⌘ and
@@ -101,8 +104,12 @@ Everything the installer adds is in plain files you can edit:
 |---|---|
 | Keyboard, trackpad, shortcuts, window look | `~/.config/hypr/macos/*.lua` |
 | Turn a whole piece off | Comment out its line in `~/.config/hypr/macos.lua` |
-| Dock settings (size, auto-hide) | `~/.local/bin/macos-dock` |
-| Pinned dock apps | Right-click an icon, or edit `~/.cache/nwg-dock-pinned` |
+| Dock settings (size, magnification, auto-hide) | Right-click the dock → Settings |
+| Dock apps | Drag to rearrange; right-click to keep in or remove from the dock |
+
+Windows leave room at the bottom for the dock. If you turn on the dock's
+auto-hide, set the bottom of `gaps_out` in `~/.config/hypr/macos/looknfeel.lua`
+back to 6 (or override it in your own `looknfeel.lua`).
 
 These load right after Omarchy's defaults and before your own
 `~/.config/hypr/*.lua` files, so anything you set in your own files wins.
@@ -128,7 +135,7 @@ To remove everything and put your original files back:
 
 Everything the installer replaces is saved in
 `~/.local/share/omarchy-macos/originals` first. The uninstaller leaves the
-packages, icons, hyprbars plugin and System Settings installed, and tells you
+packages, icons, hyprbars plugin, dock and System Settings installed, and tells you
 how to remove them.
 
 ## Requirements

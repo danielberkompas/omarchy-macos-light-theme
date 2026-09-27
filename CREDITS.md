@@ -42,7 +42,8 @@ These aren't bundled. `install.sh` downloads or installs them:
 - [WhiteSur icon theme](https://github.com/vinceliuice/WhiteSur-icon-theme) by Vince Liuice (GPL-3.0)
 - [Inter](https://rsms.me/inter/) by Rasmus Andersson (SIL Open Font License)
 - [DejaVu Sans Mono Nerd Font](https://www.nerdfonts.com/) (Bitstream Vera license + MIT)
-- [nwg-dock-hyprland](https://github.com/nwg-piotr/nwg-dock-hyprland) (MIT)
+- [ODock](https://github.com/hisnameismarco/odock) by hisnameismarco (MIT), based on
+  [Animated Dock](https://github.com/Davedes83/animated-dock) by Davedes83 (MIT)
 - [hyprbars](https://github.com/hyprwm/hyprland-plugins) from hyprland-plugins (BSD-3-Clause)
 - [OmaSettings](https://github.com/twiking/omasettings) by Tobias Wiking (MIT), used as System Settings
 

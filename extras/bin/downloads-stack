@@ -15,8 +15,14 @@ fi
 read -r MONITOR MON_X MON_W MON_H < <(hyprctl monitors -j | jq -r \
   '.[] | select(.focused) | "\(.name) \(.x) \(.width / .scale | floor) \(.height / .scale | floor)"')
 CURSOR_X=$(hyprctl cursorpos -j | jq -r '.x')
+# Top of ODock's card: its layer reaches the screen edge and adds room above
+# the card for hover labels, so measure up from the bottom (4px edge gap plus
+# the card's height: 2 * padding + icon size, plus a 1px border each side).
 DOCK_TOP=$(hyprctl layers -j | jq -r --arg m "$MONITOR" \
-  '[.[$m].levels[][] | select(.namespace == "nwg-dock") | .y] | first // empty')
+  --slurpfile shell "$HOME/.config/omarchy/shell.json" '
+  ([$shell[0].plugins[]? | select(.id == "odock")] | first // {}) as $cfg
+  | [.[$m].levels[][] | select(.namespace == "omarchy-odock")
+     | .y + .h - 4 - (2 + 2 * ($cfg.padding // 8) + ($cfg.iconSize // 44))] | first // empty')
 
 # Match the theme's light/dark mode.
 grep -q '^mode *= *"dark"' "$HOME/.local/state/omarchy/current/theme/colors.toml" 2>/dev/null && export STACK_DARK=1

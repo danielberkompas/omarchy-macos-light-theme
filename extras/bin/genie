@@ -14,7 +14,7 @@ ACTION=$1
 ADDRESS=$2
 CONFIG="$HOME/.config/quickshell/genie"
 CACHE="${XDG_RUNTIME_DIR:-/tmp}/genie"
-PINNED="$HOME/.cache/nwg-dock-pinned"
+SHELL_JSON="$HOME/.config/omarchy/shell.json"
 TITLEBAR=28 # hyprbars bar_height (~/.config/hypr/macos/titlebars.lua); drawn above the window's rect (not on Chromium)
 BORDER=1
 
@@ -39,24 +39,39 @@ client=$(jq -c --arg a "$ADDRESS" '.[] | select(.address == $a)' <<<"$clients")
 monitor=$(hyprctl monitors -j | jq -c --argjson id "$(jq '.monitor' <<<"$client")" '.[] | select(.id == $id)')
 read -r MON MON_X MON_Y MON_W MON_H < <(jq -r '"\(.name) \(.x) \(.y) \(.width / .scale | floor) \(.height / .scale | floor)"' <<<"$monitor")
 
-# Where the app's icon sits in the dock. Mirrors nwg-dock-hyprland's ordering:
-# pinned items first, then other running apps by workspace id, then class.
-# Every item is the same width, centred in the dock.
+# Where the app's icon sits in the dock (ODock, configured in shell.json).
+# Mirrors ODock's layout: its pinned items, then a divider and any other
+# running apps. Icons are one slot wide, dividers one pixel, with a gap
+# between cells; the card is centred in the dock's layer, which adds 240px of
+# room for hover labels. Sizes go through the shell's spacing scale, which is
+# recovered from the layer's actual width.
 read -r ICON_X ICON_Y < <(
   jq -r -n \
     --argjson clients "$clients" \
     --argjson layers "$(hyprctl layers -j)" \
+    --slurpfile shell "$SHELL_JSON" \
     --arg class "$(jq -r '.class' <<<"$client")" \
-    --arg mon "$MON" --argjson mx "$MON_X" --argjson my "$MON_Y" --argjson mw "$MON_W" --argjson mh "$MON_H" \
-    --rawfile pinned "$PINNED" '
-    ($pinned | split("\n") | map(select(length > 0)) | reduce .[] as $p ([]; if index([$p]) then . else . + [$p] end)) as $pins
-    | ($clients | sort_by(.workspace.id, .class) | map(.class) | map(select(length > 0))) as $running
-    | (reduce $running[] as $c ($pins; if index([$c]) then . else . + [$c] end)) as $items
-    | ($items | index([$class])) as $i
-    | ([$layers[$mon].levels[][] | select(.namespace == "nwg-dock")] | first) as $dock
+    --arg mon "$MON" --argjson mx "$MON_X" --argjson my "$MON_Y" --argjson mw "$MON_W" --argjson mh "$MON_H" '
+    def key: ascii_downcase;
+    ([$shell[0].plugins[]? | select(.id == "odock")] | first // {}) as $cfg
+    | ($cfg.iconSize // 44) as $icon | ($cfg.padding // 8) as $pad | ($cfg.spacing // 6) as $gap
+    | ($cfg.items // [] | map(if .spacer == true then {rule: true} else {app: ((.desktop // "") | sub("\\.desktop$"; "") | key)} end)) as $pinned
+    | ($pinned | map(.app // empty)) as $pinned_apps
+    | ($clients | map(.class | key) | map(select(length > 0))
+       | reduce .[] as $c ([]; if index([$c]) or ($pinned_apps | index([$c])) then . else . + [$c] end)) as $extras
+    | ($pinned + (if ($extras | length) > 0 then [{rule: true}] + ($extras | map({app: .})) else [] end)) as $cells
+    | ($cells | map(if .rule then 1 else $icon end)) as $units
+    | ([$layers[$mon].levels[][] | select(.namespace == "omarchy-odock")] | first) as $dock
+    | ($cells | map(.app) | index($class | key)) as $i
     | if $dock and $i != null then
-        (($dock.w - 12) / ($items | length)) as $cell
-        | "\($dock.x - $mx + $dock.w / 2 + ($i - (($items | length) - 1) / 2) * $cell | floor) \($dock.y - $my + $dock.h / 2 | floor)"
+        (2 * $pad + ($units | add) + (($cells | length) - 1) * $gap + 240) as $total
+        | (($dock.w - 2) / $total) as $s
+        | ($dock.w - 240 * $s) as $card
+        | ($dock.x - $mx + ($dock.w - $card) / 2 + 1 + ($pad + ($units[0:$i] | add // 0) + $i * $gap + $icon / 2) * $s) as $x
+        | ($dock.y - $my + $dock.h - 4 * $s - (2 + (2 * $pad + $icon) * $s) / 2) as $y
+        | "\($x | floor) \($y | floor)"
+      elif $dock then
+        "\($dock.x - $mx + $dock.w / 2 | floor) \($dock.y - $my + $dock.h - 30 | floor)"
       else
         "\($mw / 2 | floor) \($mh)"
       end'

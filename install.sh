@@ -19,6 +19,7 @@ skip_packages=false
 skip_titlebars=false
 skip_icons=false
 skip_settings=false
+skip_dock=false
 apply_theme=true
 
 usage() {
@@ -29,6 +30,7 @@ Usage: ./install.sh [options]
   --skip-titlebars  Don't build the hyprbars plugin (window title bars)
   --skip-icons      Don't download the WhiteSur icon theme
   --skip-settings   Don't install OmaSettings (the System Settings window)
+  --skip-dock       Don't install ODock (the dock)
   --keep-theme      Install everything but don't switch to macOS Light now
   -h, --help        Show this help
 EOF
@@ -40,6 +42,7 @@ for arg in "$@"; do
     --skip-titlebars) skip_titlebars=true ;;
     --skip-icons) skip_icons=true ;;
     --skip-settings) skip_settings=true ;;
+    --skip-dock) skip_dock=true ;;
     --keep-theme) apply_theme=false ;;
     -h | --help) usage; exit 0 ;;
     *) echo "Unknown option: $arg" >&2; usage >&2; exit 1 ;;
@@ -99,8 +102,8 @@ step "Installing packages"
 if $skip_packages; then
   note "Skipped (--skip-packages)."
 else
-  note "Dock, fonts, and the build tools hyprpm needs for title bars."
-  omarchy pkg add nwg-dock-hyprland inter-font ttf-dejavu-nerd jq \
+  note "Fonts, and the build tools hyprpm needs for title bars."
+  omarchy pkg add inter-font ttf-dejavu-nerd jq \
     cmake meson ninja cpio pkgconf git gcc
 fi
 
@@ -167,7 +170,7 @@ require("hypr.macos")
 fi
 
 # --------------------------------------------------------------------------
-step "Installing the dock, genie minimize, Downloads stack and Chromium traffic lights"
+step "Installing genie minimize, the Downloads stack and Chromium traffic lights"
 for bin in "$EXTRAS"/bin/*; do
   install_path "$bin" "$HOME/.local/bin/$(basename "$bin")" 755
 done
@@ -176,24 +179,8 @@ for qs in "$EXTRAS"/quickshell/*/; do
   qs=${qs%/}
   install_path "$qs" "$HOME/.config/quickshell/$(basename "$qs")"
 done
-install_path "$EXTRAS/dock" "$SHARE/dock"
-
-# nwg-dock reads its images from the first data dir that has them, so give it
-# a complete copy to hold the macOS-style running-app dots.
-if [[ -d /usr/share/nwg-dock-hyprland ]]; then
-  dock_data="$HOME/.local/share/nwg-dock-hyprland"
-  save_original "$dock_data"
-  mkdir -p "$dock_data"
-  cp -a /usr/share/nwg-dock-hyprland/. "$dock_data/"
-  record "$dock_data"
-fi
-
-install_path "$EXTRAS/hooks/theme-set" "$HOME/.config/omarchy/hooks/theme-set.d/macos-light-sync" 755
 
 apps="$HOME/.local/share/applications"
-install_path "$EXTRAS/applications/launchpad.desktop" "$apps/launchpad.desktop"
-install_path "$EXTRAS/applications/trash.desktop" "$apps/trash.desktop"
-sed "s|@HOME@|$HOME|g" "$EXTRAS/applications/downloads-stack.desktop" | write_file "$apps/downloads-stack.desktop"
 
 # Chromium: launch through the wrapper so its window buttons sit on the left,
 # under the traffic lights.
@@ -221,11 +208,71 @@ DCONF_PROFILE="$HOME/.config/dconf/chromium.profile" \
   dconf write /org/gnome/desktop/wm/preferences/button-layout "'close,minimize,maximize:'"
 record "$HOME/.config/dconf/chromium"
 
-pins="$HOME/.cache/nwg-dock-pinned"
-if [[ -s $pins ]]; then
-  note "Keeping your pinned dock apps (~/.cache/nwg-dock-pinned)."
+# --------------------------------------------------------------------------
+# Earlier versions used nwg-dock-hyprland. Remove what they installed.
+for old in "$HOME/.local/bin/macos-dock" "$HOME/.local/bin/macos-theme-sync" \
+  "$HOME/.config/omarchy/hooks/theme-set.d/macos-light-sync" "$SHARE/dock" \
+  "$HOME/.local/share/nwg-dock-hyprland" "$HOME/.config/nwg-dock-hyprland/style.css" \
+  "$HOME/.local/share/applications/launchpad.desktop" "$HOME/.local/share/applications/trash.desktop" \
+  "$HOME/.local/share/applications/downloads-stack.desktop"; do
+  if in_manifest "$old"; then
+    rm -rf -- "$old"
+    grep -vxF -- "$old" "$MANIFEST" >"$MANIFEST.tmp" || true
+    mv "$MANIFEST.tmp" "$MANIFEST"
+  fi
+done
+pkill -x nwg-dock-hyprla 2>/dev/null || true
+
+# --------------------------------------------------------------------------
+step "Setting up the dock (ODock)"
+shell_json="$HOME/.config/omarchy/shell.json"
+if $skip_dock; then
+  note "Skipped (--skip-dock)."
 else
-  printf '%s\n' org.gnome.Nautilus launchpad omasettings chromium foot localsend omacalc downloads-stack trash | write_file "$pins"
+  if omarchy plugin list --json 2>/dev/null | jq -e '[.. | objects | select(.id? == "odock")] | length > 0' >/dev/null; then
+    note "ODock is already installed."
+  else
+    omarchy plugin add https://github.com/hisnameismarco/odock --enable --yes ||
+      warn "Couldn't install ODock. Try later: omarchy plugin add https://github.com/hisnameismarco/odock --enable"
+  fi
+
+  if [[ -f $shell_json ]] && jq -e '.plugins[]? | select(.id == "odock")' "$shell_json" >/dev/null 2>&1; then
+    save_original "$shell_json"
+    # Pinned apps: the old nwg-dock pins if there are any, otherwise a starter
+    # set. Apps first, then a divider, Downloads and Trash, like the Mac.
+    apps_json='["org.gnome.Nautilus","omasettings","chromium","foot","localsend","omacalc"]'
+    old_pins="$HOME/.cache/nwg-dock-pinned"
+    if [[ -s $old_pins ]]; then
+      migrated=$({ grep -vxE 'launchpad|downloads-stack|trash|' "$old_pins" || true; } | jq -R . | jq -sc .)
+      [[ $migrated != "[]" ]] && apps_json=$migrated
+    fi
+    tmp=$(mktemp)
+    # Defaults only fill in what isn't set yet, so settings and the order you
+    # arrange the dock in survive running install.sh again.
+    jq --arg home "$HOME" --argjson apps "$apps_json" '
+      {
+        edge: "bottom", align: "center", iconSize: 44, zoom: 0.45, magnify: true,
+        spacing: 4, padding: 8, backgroundOpacity: 0.65, borderOpacity: 0.22,
+        cornerShape: "rounded", cornerRadius: 22, animation: 140, border: true,
+        autohide: false, dodge: false, pressure: true, showWhenEmpty: true,
+        runningIndicator: "dot", labels: true, tooltips: true,
+        tintIcons: false, tintRunning: false, monochrome: false, tiles: false
+      } as $defaults
+      | ([{desktop: $apps[0]}]
+         + [{exec: "omarchy-menu toggle apps", icon: "view-app-grid", label: "Launchpad"}]
+         + ($apps[1:] | map({desktop: .}))
+         + [{spacer: true},
+            {exec: ($home + "/.local/bin/downloads-stack"), icon: "folder-download", label: "Downloads"},
+            {exec: "nautilus trash:///", icon: "user-trash", label: "Trash"}]) as $items
+      | (.plugins[] | select(.id == "odock")) |= ($defaults + .
+          | if ((.items // []) | length) == 0 then .items = $items else . end)
+    ' "$shell_json" >"$tmp" && jq -e '.plugins[] | select(.id == "odock") | .items | length > 0' "$tmp" >/dev/null &&
+      cat "$tmp" >"$shell_json"
+    rm -f "$tmp"
+    note "Drag apps along the dock to rearrange them; right-click it for its settings."
+  else
+    warn "ODock's settings entry wasn't found in ~/.config/omarchy/shell.json."
+  fi
 fi
 
 # --------------------------------------------------------------------------
@@ -326,10 +373,6 @@ step "Applying"
 if $apply_theme; then
   omarchy theme set macos-light >/dev/null 2>&1 || warn "Couldn't switch to macOS Light."
 fi
-# macos-theme-sync writes the dock's stylesheet; track it so uninstall removes it.
-save_original "$HOME/.config/nwg-dock-hyprland/style.css"
-record "$HOME/.config/nwg-dock-hyprland/style.css"
-"$HOME/.local/bin/macos-theme-sync"
 hyprctl reload >/dev/null
 
 errors=$(hyprctl configerrors 2>/dev/null | grep -v '^\s*$' || true)
@@ -341,7 +384,6 @@ fi
 # Start the helpers now; they start automatically at every login after this.
 # (setsid -f fully detaches them, so they don't hold this script's output open.)
 start() { setsid -f uwsm-app -- "$@" </dev/null >/dev/null 2>&1; }
-pgrep -x nwg-dock-hyprla >/dev/null || start "$HOME/.local/bin/macos-dock"
 pgrep -f "qs -p $HOME/.config/quickshell/genie" >/dev/null || start qs -p "$HOME/.config/quickshell/genie"
 pgrep -f "qs -p $HOME/.config/quickshell/chrome-lights" >/dev/null || start qs -p "$HOME/.config/quickshell/chrome-lights"
 
