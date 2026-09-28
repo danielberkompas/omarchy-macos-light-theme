@@ -82,7 +82,7 @@ title bars and window borders switch with it.
 | ⌘R ⌘L | Reload, go to the address bar |
 | ⌘Space | Open apps (like Spotlight) |
 | ⌥⌘Space | Omarchy menu |
-| ⌘Tab ⇧⌘Tab | Switch windows |
+| ⌘Tab ⇧⌘Tab | App switcher: hold ⌘, tap Tab, let go to switch (Esc cancels) |
 | ⌘M ⌥⌘M | Minimize to the dock, restore |
 | ⌃⌘F | Full screen |
 | ⇧⌘3 ⇧⌘4 ⇧⌘5 | Screenshot the screen, an area, or open the capture menu |

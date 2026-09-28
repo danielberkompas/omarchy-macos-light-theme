@@ -18,5 +18,9 @@ hl.config({
   },
 })
 
+-- Leave the pointer where it is when switching windows (⌘Tab, the dock, …);
+-- macOS never moves it for you.
+hl.config({ cursor = { no_warps = true } })
+
 -- Swipe left/right with three fingers to move between desktops (Spaces).
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })

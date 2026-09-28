@@ -85,11 +85,7 @@ o.bind("SUPER + SHIFT + T", "Reopen closed tab", mac_key("CTRL + SHIFT", "T"))
 o.bind("SUPER + SPACE", "App launcher", "omarchy-menu toggle apps")
 o.bind("SUPER + ALT + SPACE", "Omarchy menu", "omarchy-menu toggle")
 
--- ⌘Tab / ⇧⌘Tab = switch windows.
-o.bind("SUPER + TAB", "Next window", hl.dsp.window.cycle_next())
-o.bind("SUPER + TAB", "Reveal window on top", hl.dsp.window.bring_to_top())
-o.bind("SUPER + SHIFT + TAB", "Previous window", hl.dsp.window.cycle_next({ next = false }))
-o.bind("SUPER + SHIFT + TAB", "Reveal window on top", hl.dsp.window.bring_to_top())
+-- ⌘Tab / ⇧⌘Tab = app switcher. See switcher.lua.
 -- Ctrl+⌘←/→ = previous/next desktop (also: three-finger swipe).
 o.bind("SUPER + CTRL + ALT + LEFT", "Previous desktop", hl.dsp.focus({ workspace = "e-1" }))
 o.bind("SUPER + CTRL + ALT + RIGHT", "Next desktop", hl.dsp.focus({ workspace = "e+1" }))

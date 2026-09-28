@@ -4,7 +4,8 @@
 -- turn that piece off.
 
 require("hypr.macos.input")      -- ⌘ key layout, trackpad, three-finger swipe
-require("hypr.macos.bindings")   -- ⌘C/⌘V/⌘W/⌘Q/⌘Space/⌘Tab/⇧⌘4 … shortcuts
+require("hypr.macos.bindings")   -- ⌘C/⌘V/⌘W/⌘Q/⌘Space/⇧⌘4 … shortcuts
+require("hypr.macos.switcher")   -- ⌘Tab app switcher
 require("hypr.macos.minimize")   -- ⌘M minimize to the dock with a genie animation
 require("hypr.macos.looknfeel")  -- rounded corners, shadows, blur, animations
 require("hypr.macos.titlebars")  -- title bars with red/yellow/green buttons

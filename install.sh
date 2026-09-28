@@ -386,6 +386,7 @@ fi
 start() { setsid -f uwsm-app -- "$@" </dev/null >/dev/null 2>&1; }
 pgrep -f "qs -p $HOME/.config/quickshell/genie" >/dev/null || start qs -p "$HOME/.config/quickshell/genie"
 pgrep -f "qs -p $HOME/.config/quickshell/chrome-lights" >/dev/null || start qs -p "$HOME/.config/quickshell/chrome-lights"
+pgrep -f "qs -p $HOME/.config/quickshell/app-switcher" >/dev/null || start qs -p "$HOME/.config/quickshell/app-switcher"
 
 cat <<'EOF'
 

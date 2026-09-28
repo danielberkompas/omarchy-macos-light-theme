@@ -66,3 +66,6 @@ hl.layer_rule({ match = { namespace = "omarchy-bar" }, blur = true, ignore_alpha
 
 -- Frosted-glass Downloads stack popup (downloads-stack).
 hl.layer_rule({ match = { namespace = "downloads-stack" }, blur = true, ignore_alpha = 0.3, animation = "fade" })
+
+-- Frosted-glass ⌘Tab app switcher (app-switcher).
+hl.layer_rule({ match = { namespace = "^app-switcher$" }, blur = true, ignore_alpha = 0.3, animation = "fade" })
